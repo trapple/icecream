@@ -28,6 +28,12 @@ var selectionModel = {
   // アイスクリームの個数
   icecreamNumber: 2,
 
+  // アイスクリームの個数変更
+  changeIcecreamNumber: function (n) {
+    this.icecreamNumber = n;
+    this.clear();
+  },
+
   // アイスクリームを追加する
   add: function (item) {
     var list = this.list;
@@ -57,58 +63,77 @@ var selectionModel = {
   updateViews: function () {
     updateSelection();
     updateIcecreamList();
+  },
+
+  // クリア
+  clear: function () {
+    this.list = []; 
+    this.updateViews();
   }
 };
 
-// 簡易テスト関数
-function ok(title, expect, value) {
-  if (expect === value) {
-    console.log("OK : " + title);
-  } else {
-    console.log("NG : " + title + " [" + expect + "] ---> [" + value + "]");
-  }
-}
-
-// テスト内容
-function testModels() {
-  var all = icecreamModel.getAll();
-  
-  ok("icecreamModel:length", all.length, 6);
-  ok("icecreamModel.findById", icecreamModel.findById("t4"), all[3]);
-
-  ok("selectionModel:最初の個数", selectionModel.getIcecreams().length, 0);
-  ok("selectionModel.contain:空の場合", false, selectionModel.contain(all[0]));
-
-  selectionModel.add(all[0]);
-  ok("selectionModel:1つめを追加した時の個数", selectionModel.getIcecreams().length, 1);
-  ok("selectionModel.contain:1つめを追加した時のチェック", true, selectionModel.contain(all[0]));
-
-  selectionModel.add(all[1]);
-  ok("selectionModel:2つめを追加した時の個数", selectionModel.getIcecreams().length, 2);
-  ok("selectionModel.contain:2つめを追加した時のチェック", true, selectionModel.contain(all[1]));
-
-  selectionModel.add(all[2]);
-  ok("selectionModel:3つめを追加した時の個数", selectionModel.getIcecreams().length, 2);
-  ok("selectionModel.contain:3つめを追加した時のチェック", true, selectionModel.contain(all[2]));
-  ok("selectionModel.contain:3つめを追加したら最初のものは消える", false, selectionModel.contain(all[0]));
-}
-
-testModels();
+//// 簡易テスト関数
+//function ok(title, expect, value) {
+//  if (expect === value) {
+//    console.log("OK : " + title);
+//  } else {
+//    console.log("NG : " + title + " [" + expect + "] ---> [" + value + "]");
+//  }
+//}
+//
+//// テスト内容
+//function testModels() {
+//  var all = icecreamModel.getAll();
+//  
+//  ok("icecreamModel:length", all.length, 6);
+//  ok("icecreamModel.findById", icecreamModel.findById("t4"), all[3]);
+//
+//  ok("selectionModel:最初の個数", selectionModel.getIcecreams().length, 0);
+//  ok("selectionModel.contain:空の場合", false, selectionModel.contain(all[0]));
+//
+//  selectionModel.add(all[0]);
+//  ok("selectionModel:1つめを追加した時の個数", selectionModel.getIcecreams().length, 1);
+//  ok("selectionModel.contain:1つめを追加した時のチェック", true, selectionModel.contain(all[0]));
+//
+//  selectionModel.add(all[1]);
+//  ok("selectionModel:2つめを追加した時の個数", selectionModel.getIcecreams().length, 2);
+//  ok("selectionModel.contain:2つめを追加した時のチェック", true, selectionModel.contain(all[1]));
+//
+//  selectionModel.add(all[2]);
+//  ok("selectionModel:3つめを追加した時の個数", selectionModel.getIcecreams().length, 2);
+//  ok("selectionModel.contain:3つめを追加した時のチェック", true, selectionModel.contain(all[2]));
+//  ok("selectionModel.contain:3つめを追加したら最初のものは消える", false, selectionModel.contain(all[0]));
+//}
+//
+//testModels();
 
 // アイスクリーム一覧を構築
 $(function () {
   var els = $("#icecreams");
   $.each(icecreamModel.getAll(), function (i, icecream) {
     els.append(
-      $("<li>").append($("<input type='checkbox'>").attr('name', icecream.id))
-        .append($("<span>").text(icecream.name))
-        .click(
-          // コントローラー呼び出し
-          onclickIcecream
+      $('<div class="checkbox">').append( 
+        $('<label>').append( 
+          $("<input type='checkbox'>").attr('name', icecream.id)
+          .click(
+            // コントローラー呼び出し
+            onclickIcecream
+          )
+        ).append(icecream.name)
       )
     ) // end of eld.append
   }); //end of each
   selectionModel.updateViews();
+
+  $("#clear").click(function (event) {
+    event.preventDefault();
+    selectionModel.clear();
+  });
+
+  $("#number").change(function (event) {
+    var selected = $(this).find("option:selected");
+    selectionModel.changeIcecreamNumber(selected.val());
+  });
 });
 
 // ビュー: チェックボックスを更新するビュー 
@@ -128,11 +153,13 @@ function updateIcecreamList() {
   );
 }
 
+// コントローラー: GUIのイベントからモデルの更新に変換
 function onclickIcecream(event) {
-  var checkbox = $(event.currentTarget).find("input[type='checkbox']");
+  var checkbox = $(this);
   if(checkbox){
     selectionModel.add(
       icecreamModel.findById(checkbox.attr("name"))  
     );
   }
 }
+
